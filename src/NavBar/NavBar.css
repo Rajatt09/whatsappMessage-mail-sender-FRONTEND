@@ -1,0 +1,83 @@
+/* Navbar styles */
+.navbar {
+  position: relative;
+}
+
+.navbar-brand {
+  margin-left: 1rem;
+}
+
+/* Sidebar styles */
+.sidebar {
+  height: 100%;
+  width: 250px; /* Adjust width as needed */
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: #333;
+  color: white;
+  overflow-x: hidden;
+  transition: 0.3s;
+  transform: translateX(100%);
+  z-index: 999;
+  padding-top: 60px; /* To ensure content is not hidden behind the close button */
+}
+
+.sidebar.show {
+  transform: translateX(0);
+}
+
+.sidebar-btn {
+  margin-right: 10px;
+}
+
+.sidebar .closebtn {
+  position: absolute;
+  top: 0px;
+  left: 15px;
+  font-size: 36px;
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.sidebar .flex-column {
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  height: calc(100% - 60px); /* To keep buttons centered */
+}
+
+.nav-link-navbar {
+  color: white !important;
+  padding: 10px 20px !important;
+  text-align: center;
+  /* border-radius: 20px; */
+}
+
+.nav-link-navbar:hover {
+  background-color: #575757;
+  border-radius: 20px;
+}
+
+/* Hide the sidebar on larger screens and show the navbar items instead */
+@media (min-width: 992px) {
+  .sidebar {
+    display: none;
+  }
+
+  .navbar-collapse {
+    display: flex !important;
+    justify-content: flex-end;
+    margin-right: 1rem; /* Space from right edge */
+  }
+
+  .navbar-nav {
+    align-items: center; /* Center nav items vertically */
+  }
+
+  .navbar-toggler {
+    display: none;
+  }
+}
