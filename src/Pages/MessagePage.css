@@ -1,4 +1,3 @@
-/* MessagePage.css */
 h1 {
   color: #333;
 }
@@ -32,4 +31,8 @@ h1 {
 
 .nav-tabs {
   border-bottom: 1px solid #ddd;
+}
+
+.sent-placeholder {
+  color: #c6c4c4;
 }
