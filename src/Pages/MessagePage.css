@@ -22,6 +22,7 @@ h1 {
 }
 
 .nav-tabs .nav-link {
+  margin-right: 5px;
   border-bottom: none;
 }
 

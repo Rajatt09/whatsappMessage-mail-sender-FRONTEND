@@ -15,7 +15,6 @@ function App() {
         <Routes>
           <Route path="/" element={<MessagePage />} />
           <Route path="/sent-status" element={<SentStatusPage />} />
-
         </Routes>
         <Footer />
       </div>

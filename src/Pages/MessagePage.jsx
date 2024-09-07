@@ -11,23 +11,25 @@ import {
   Card,
 } from "react-bootstrap";
 import { ClipLoader } from "react-spinners";
-import { CheckCircleFill, XCircleFill } from 'react-bootstrap-icons';
+import { CheckCircleFill, XCircleFill } from "react-bootstrap-icons";
 import "./MessagePage.css";
+import axios from "axios";
 
 const MessagePage = () => {
+  const [excelFile, setExcelFile] = useState(null);
   const [fileData, setFileData] = useState([]);
   const [activeTab, setActiveTab] = useState("message");
-  const [showError, setShowError] = useState(false);
+  const [showError, setShowError] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
   const sendEmails = () => {
-    setLoading(true);
+    // setLoading(true);
     setActiveTab("sent-status");
 
     setFileData((prevFileData) =>
-      prevFileData.map(user => ({ ...user, emailStatus: "sending" }))
+      prevFileData.map((user) => ({ ...user, emailStatus: "sending" }))
     );
 
     const eventSource = new EventSource(
@@ -54,14 +56,17 @@ const MessagePage = () => {
           const updatedFileData = prevFileData.map((user) =>
             user.email === update.email
               ? {
-                ...user,
-                emailSent: update.emailSent === "yes",
-                emailStatus: update.emailSent,
-              }
+                  ...user,
+                  emailSent: update.emailSent === "yes",
+                  emailStatus: update.emailSent,
+                }
               : user
           );
 
-          if (update.email && !updatedFileData.find((user) => user.email === update.email)) {
+          if (
+            update.email &&
+            !updatedFileData.find((user) => user.email === update.email)
+          ) {
             updatedFileData.push({
               name: update.name,
               phoneNo: update.phoneNo,
@@ -88,11 +93,11 @@ const MessagePage = () => {
   };
 
   const sendWhatsAppMessages = () => {
-    setLoading(true);
+    // setLoading(true);
     setActiveTab("sent-status");
 
     setFileData((prevFileData) =>
-      prevFileData.map(user => ({ ...user, messageStatus: "sending" }))
+      prevFileData.map((user) => ({ ...user, messageStatus: "sending" }))
     );
 
     const eventSource = new EventSource(
@@ -100,7 +105,7 @@ const MessagePage = () => {
     );
 
     setFileData((prevFileData) =>
-      prevFileData.map(user => ({ ...user, messageStatus: "sending" }))
+      prevFileData.map((user) => ({ ...user, messageStatus: "sending" }))
     );
     eventSource.onopen = () => {
       console.log("Connection to server opened.");
@@ -122,14 +127,17 @@ const MessagePage = () => {
           const updatedFileData = prevFileData.map((user) =>
             user.phoneNo === update.phoneNo
               ? {
-                ...user,
-                messageSent: update.messageSent === "yes",
-                messageStatus: update.messageSent,
-              }
+                  ...user,
+                  messageSent: update.messageSent === "yes",
+                  messageStatus: update.messageSent,
+                }
               : user
           );
 
-          if (update.phoneNo && !updatedFileData.find((user) => user.phoneNo === update.phoneNo)) {
+          if (
+            update.phoneNo &&
+            !updatedFileData.find((user) => user.phoneNo === update.phoneNo)
+          ) {
             updatedFileData.push({
               name: update.name,
               phoneNo: update.phoneNo,
@@ -154,7 +162,6 @@ const MessagePage = () => {
       eventSource.close();
     };
   };
-
 
   // const sendBoth = () => {
   //   setLoading(true);
@@ -231,59 +238,50 @@ const MessagePage = () => {
   // };
 
   // uploading a excel file
-  const uploadFile = async (e) => {
-    // checking if file only is excel file
 
-    const file = e.target.files[0];
+  const handleFileChange = (e) => {
+    setExcelFile(e.target.files[0]);
+  };
 
+  const uploadFile = async () => {
+    console.log("file is: ", excelFile);
+    setShowError("");
+    const validExtensions = ["xlsx", "xls", "xlsm", "csv"];
 
-    if (file.name.split('.').pop() !== 'xlsx') {
-      alert('Please upload a valid excel file');
-      setFileData([]);
-
-      // clear form data
-      e.target
-        ? e.target.value = ''
-        : null;
-
-
-
+    if (!excelFile) {
+      setShowError("No file chosen.");
       return;
     }
 
-
+    if (
+      !validExtensions.includes(excelFile.name.split(".").pop().toLowerCase())
+    ) {
+      setShowError("Please upload a valid excel file.");
+      setExcelFile(null);
+      return;
+    }
 
     const formData = new FormData();
 
-    if (!file) {
-      setShowError(true);
-      return;
-    }
-    setShowError(false);
-
-
-    formData.append("file", file);
+    formData.append("usersExcelFile", excelFile);
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/message/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await axios.post(
+        "http://localhost:8000/api/v1/files/upload/excelFile",
+        formData
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        setFileData(data);
+      if (response.status == 200) {
+        alert("File uploaded successfully.");
       } else {
+        alert("Failed to upload file.");
         console.error("Failed to upload file");
       }
     } catch (error) {
+      alert("Failed to upload file.");
       console.error("Failed to upload file", error);
     }
   };
-
-
-
-
 
   const viewDetails = () => {
     if (!fileData.length) {
@@ -344,7 +342,7 @@ const MessagePage = () => {
                     </Button>
                     {/* <Button
                       variant="success"
-                      onClick={sendBoth}
+                      // onClick={sendBoth}
                       className="m-2"
                       disabled={loading}
                     >
@@ -372,7 +370,11 @@ const MessagePage = () => {
                 </div>
               </Tab>
 
-              <Tab eventKey="sent-status" title="Sent Status">
+              <Tab
+                eventKey="sent-status"
+                title="Sent Status"
+                className="ml-auto"
+              >
                 <Row className="justify-content-center">
                   <Col md={12} style={{ textAlign: "center" }}>
                     <Table striped bordered hover className="mt-4">
@@ -428,54 +430,43 @@ const MessagePage = () => {
           </Col>
         </Row>
 
+        {activeTab === "message" && (
+          <Row className="justify-content-center">
+            <Col md={8}>
+              <Card className="p-1 mb-4 shadow">
+                <Card.Body>
+                  <h3>Upload Excel File</h3>
+                  <br />
+                  <input
+                    type="file"
+                    className="form-control"
+                    onChange={handleFileChange}
+                    accept=".xlsx, .xls, .csv"
+                  />
+                  {showError != "" && (
+                    <p className="text-danger mt-2 mb-0">{showError}</p>
+                    // add button for uploading file
+                  )}
 
+                  {
+                    // button for uploading file
+                    <Button
+                      variant="primary"
+                      className="mt-3"
+                      onClick={uploadFile}
+                    >
+                      Upload File
+                    </Button>
+                  }
 
-
-        {
-          activeTab === "message" && (
-            <Row className="justify-content-center">
-              <Col md={8}>
-                <Card className="p-4 mb-4 shadow">
-                  <Card.Body>
-                    <h3>Upload Excel File</h3>
-                    <input
-                      type="file"
-                      className="form-control"
-                      onChange={uploadFile}
-                      accept=".xlsx, .xls, .csv"
-                    />
-                    {showError && (
-                      <p className="text-danger mt-2">No file chosen</p>
-                      // add button for uploading file
-
-
-                    )}
-
-
-                    {
-
-                      // button for uploading file
-                      <Button
-                        variant="primary"
-                        className="mt-3"
-                        onClick={viewDetails}
-                      >
-                        Upload File
-                      </Button>
-
-                    }
-
-                    <p className="mt-3">
-                      <strong>Instructions: File only in excel format </strong>
-                    </p>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          )
-        }
-
-
+                  <p className="mt-3">
+                    <strong>Note: Upload File only in excel format.</strong>
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
       </main>
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
