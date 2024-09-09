@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Row,
@@ -42,13 +42,13 @@ const MessagePage = () => {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState("");
 
+  console.log("hey buddy: ", whatsappMessage);
+
   useEffect(() => {
     const fetchHistory = async () => {
       setHistoryLoading(true);
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/v1/message/get-mails-messages/history"
-        );
+        const response = await axios.get("/message/get-mails-messages/history");
         console.log("history is: ", response.data);
         setHistory(response.data.data);
         setHistoryLoading(false);
@@ -60,6 +60,13 @@ const MessagePage = () => {
 
     fetchHistory();
   }, []);
+
+  const formatText = (text) => {
+    return text
+      .replace(/\*([^\*]+)\*/g, "<b>$1</b>") // Convert *bold* to <b>bold</b>
+      .replace(/_([^_]+)_/g, "<i>$1</i>") // Convert _italic_ to <i>italic</i>
+      .replace(/~([^~]+)~/g, "<del>$1</del>"); // Convert ~strikethrough~ to <del>strikethrough</del>
+  };
 
   const sendEmails = () => {
     // setLoading(true);
@@ -99,7 +106,7 @@ const MessagePage = () => {
     );
 
     const eventSource = new EventSource(
-      "http://localhost:8000/api/v1/message/sendMessage/via-gmail"
+      `${import.meta.env.VITE_LOCALHOST}/message/sendMessage/via-gmail`
     );
 
     eventSource.onopen = () => {
@@ -195,10 +202,16 @@ const MessagePage = () => {
       prevFileData.map((user) => ({ ...user, messageStatus: "sending" }))
     );
 
-    // const whatsappResponse = axios.post("")
+    const whatsappResponse = await axios.post(
+      "/message/sendMessage/whatsappData",
+      {
+        eventdetail,
+        whatsappMessage,
+      }
+    );
 
     const eventSource = new EventSource(
-      "http://localhost:8000/api/v1/message/sendMessage/via-whatsapp"
+      `${import.meta.env.VITE_LOCALHOST}/message/sendMessage/via-whatsapp`
     );
 
     setFileData((prevFileData) =>
@@ -656,16 +669,49 @@ const MessagePage = () => {
 
                     <Form>
                       <Form.Group controlId="whatsappMessage">
-                        <Form.Label>WhatsApp Message</Form.Label>
+                        <Form.Label>
+                          <strong>WhatsApp Message</strong>
+                        </Form.Label>
                         <Form.Control
                           as="textarea"
                           rows={3}
+                          style={{ resize: "none" }}
                           placeholder="Write your WhatsApp message"
                           value={whatsappMessage}
                           onChange={(e) => setWhatsappMessage(e.target.value)}
                         />
                       </Form.Group>
                     </Form>
+                    {/* <br /> */}
+                    <p className="text-muted mt-3">
+                      <strong>Formatting Instructions:</strong>
+                      <br />
+                      <ul>
+                        <li>
+                          <strong>Bold:</strong> Enclose text with{" "}
+                          <code>*</code> (e.g., <code>*bold text*</code>)
+                        </li>
+                        <li>
+                          <strong>Italic:</strong> Enclose text with{" "}
+                          <code>_</code> (e.g., <code>_italic text_</code>)
+                        </li>
+                        <li>
+                          <strong>Strikethrough:</strong> Enclose text with{" "}
+                          <code>~</code> (e.g.,{" "}
+                          <code>~strikethrough text~</code>)
+                        </li>
+                        <li>
+                          <strong>New Lines:</strong> Press <code>Enter</code>{" "}
+                          to add a new line
+                        </li>
+                        <li>
+                          <strong>Dynamic Data:</strong> Use{" "}
+                          <code>{`{someword}`}</code> to insert dynamic content
+                          (e.g., <code>{`{name}`}</code> will be replaced with
+                          the receiver's name)
+                        </li>
+                      </ul>
+                    </p>
                   </Card.Body>
                 </Card>
               </Col>
