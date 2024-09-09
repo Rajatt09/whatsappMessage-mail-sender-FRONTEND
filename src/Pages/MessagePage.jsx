@@ -21,10 +21,26 @@ const MessagePage = () => {
   const [excelFile, setExcelFile] = useState(null);
   const [fileData, setFileData] = useState([]);
   const [whatsappMessage, setWhatsappMessage] = useState("");
+  const [mailMessage, setmailMessage] = useState({
+    subject: "",
+    message: "",
+    person1: {
+      name: "",
+      phone: "",
+    },
+    person2: {
+      name: "",
+      phone: "",
+    },
+    fileData: "",
+  });
   const [activeTab, setActiveTab] = useState("message");
   const [showError, setShowError] = useState({
     message: "",
-    mail: "",
+    mail: {
+      subject: "",
+      message: "",
+    },
     uploadfile: "",
     eventdetail: {
       eventname: "",
@@ -68,17 +84,33 @@ const MessagePage = () => {
       .replace(/~([^~]+)~/g, "<del>$1</del>"); // Convert ~strikethrough~ to <del>strikethrough</del>
   };
 
-  const sendEmails = () => {
+  const handleMailFileChange = (e) => {
+    const file = e.target.files[0];
+    setmailMessage({ ...mailMessage, fileData: file });
+  };
+
+  const handlePersonChange = (person, field, value) => {
+    setmailMessage({
+      ...mailMessage,
+      [person]: { ...mailMessage[person], [field]: value },
+    });
+  };
+
+  const sendEmails = async () => {
     // setLoading(true);
     setShowError({
       message: "",
-      mail: "",
+      mail: {
+        subject: "",
+        message: "",
+      },
       uploadfile: "",
       eventdetail: {
         eventname: "",
         eventdate: "",
       },
     });
+
     if (eventdetail.name == "") {
       setShowError((prevData) => ({
         ...prevData,
@@ -99,11 +131,37 @@ const MessagePage = () => {
       }));
       return;
     }
+
+    if (mailMessage.subject == "") {
+      setShowError((prevData) => ({
+        ...prevData,
+        mail: {
+          ...prevData.mail,
+          subject: "Please provide subject.",
+        },
+      }));
+
+      return;
+    } else if (mailMessage.message == "") {
+      setShowError((prevData) => ({
+        ...prevData,
+        mail: {
+          ...prevData.mail,
+          message: "Please provide message.",
+        },
+      }));
+      return;
+    }
     setActiveTab("sent-status");
 
     setFileData((prevFileData) =>
       prevFileData.map((user) => ({ ...user, emailStatus: "sending" }))
     );
+
+    const mailResponse = await axios.post("/message/sendMessage/mailData", {
+      eventdetail,
+      mailMessage,
+    });
 
     const eventSource = new EventSource(
       `${import.meta.env.VITE_LOCALHOST}/message/sendMessage/via-gmail`
@@ -169,7 +227,10 @@ const MessagePage = () => {
     // setLoading(true);
     setShowError({
       message: "",
-      mail: "",
+      mail: {
+        subject: "",
+        message: "",
+      },
       uploadfile: "",
       eventdetail: {
         eventname: "",
@@ -674,7 +735,7 @@ const MessagePage = () => {
                         </Form.Label>
                         <Form.Control
                           as="textarea"
-                          rows={3}
+                          rows={4}
                           style={{ resize: "none" }}
                           placeholder="Write your WhatsApp message"
                           value={whatsappMessage}
@@ -730,14 +791,135 @@ const MessagePage = () => {
                       <strong>( Required only while sending mails )</strong>
                     </p>
                     <Form>
+                      <Form.Group controlId="emailSubject">
+                        <Form.Label>
+                          <strong>Subject</strong> {""}
+                          <span style={{ color: "red" }}>*</span>
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Write email subject"
+                          value={mailMessage.subject}
+                          onChange={(e) =>
+                            setmailMessage({
+                              ...mailMessage,
+                              subject: e.target.value,
+                            })
+                          }
+                        />
+                      </Form.Group>
+                      {showError.mail.subject != "" && (
+                        <p className="text-danger mt-2 mb-0">
+                          {showError.mail.subject}
+                        </p>
+                      )}
+                      <br />
                       <Form.Group controlId="emailMessage">
-                        <Form.Label>Email Message</Form.Label>
+                        <Form.Label>
+                          <strong>Email Message</strong> {""}
+                          <span style={{ color: "red" }}>*</span>
+                        </Form.Label>
                         <Form.Control
                           as="textarea"
-                          rows={3}
-                          placeholder="Enter your email message"
-                          // value={emailMessage}
-                          // onChange={(e) => setEmailMessage(e.target.value)}
+                          rows={10}
+                          placeholder="Write your email message"
+                          style={{ resize: "none" }}
+                          value={mailMessage.message}
+                          onChange={(e) =>
+                            setmailMessage({
+                              ...mailMessage,
+                              message: e.target.value,
+                            })
+                          }
+                        />
+                      </Form.Group>
+                      {showError.mail.message != "" && (
+                        <p className="text-danger mt-2 mb-0">
+                          {showError.mail.message}
+                        </p>
+                      )}
+                      <br />
+                      <Form.Group controlId="contact1">
+                        <Form.Label>
+                          <strong>Contact Person 1 (Optional)</strong>
+                        </Form.Label>
+                        <Row>
+                          <Col md={6} className="mb-2 mb-md-0">
+                            <Form.Control
+                              type="text"
+                              placeholder="Name"
+                              value={mailMessage.person1.name}
+                              onChange={(e) =>
+                                handlePersonChange(
+                                  "person1",
+                                  "name",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </Col>
+                          <Col md={6}>
+                            <Form.Control
+                              type="text"
+                              placeholder="Phone Number"
+                              value={mailMessage.person1.phone}
+                              onChange={(e) =>
+                                handlePersonChange(
+                                  "person1",
+                                  "phone",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </Col>
+                        </Row>
+                      </Form.Group>
+
+                      <br />
+                      <Form.Group controlId="contact2">
+                        <Form.Label>
+                          <strong>Contact Person 2 (Optional)</strong>
+                        </Form.Label>
+                        <Row>
+                          <Col md={6} className="mb-2 mb-md-0">
+                            <Form.Control
+                              type="text"
+                              placeholder="Name"
+                              value={mailMessage.person2.name}
+                              onChange={(e) =>
+                                handlePersonChange(
+                                  "person2",
+                                  "name",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </Col>
+                          <Col md={6}>
+                            <Form.Control
+                              type="text"
+                              placeholder="Phone Number"
+                              value={mailMessage.person2.phone}
+                              onChange={(e) =>
+                                handlePersonChange(
+                                  "person2",
+                                  "phone",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </Col>
+                        </Row>
+                      </Form.Group>
+
+                      <br />
+                      <Form.Group controlId="fileUpload">
+                        <Form.Label>
+                          <strong>Upload File (Optional)</strong>
+                        </Form.Label>
+                        <Form.Control
+                          type="file"
+                          onChange={handleMailFileChange}
                         />
                       </Form.Group>
                     </Form>

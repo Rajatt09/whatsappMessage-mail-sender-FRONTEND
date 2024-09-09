@@ -10,7 +10,7 @@ import {
   Form,
   Button,
 } from "react-bootstrap";
-import { CheckCircleFill, Trash } from "react-bootstrap-icons";
+import { CheckCircleFill, Trash, XCircleFill } from "react-bootstrap-icons";
 import "./MessagesHistory.css";
 
 const MessagesHistory = ({ history, loading, error, onDelete }) => {
@@ -172,14 +172,14 @@ const MessagesHistory = ({ history, loading, error, onDelete }) => {
                                               {record.emailSend ? (
                                                 <CheckCircleFill color="green" />
                                               ) : (
-                                                <CheckCircleFill color="red" />
+                                                <XCircleFill color="red" />
                                               )}
                                             </td>
                                             <td style={{ textAlign: "center" }}>
                                               {record.whatsappSend ? (
                                                 <CheckCircleFill color="green" />
                                               ) : (
-                                                <CheckCircleFill color="red" />
+                                                <XCircleFill color="red" />
                                               )}
                                             </td>
                                           </tr>
